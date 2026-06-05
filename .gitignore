@@ -1,0 +1,59 @@
+# ===========================================================================
+# .gitignore - Construction Safety Helmet Detection (YOLO26S)
+# ===========================================================================
+
+# --- Dataset (besar, JANGAN di-commit) ---
+/dataset/
+/dataset.zip
+
+# --- Hasil eksperimen (semua output) ---
+# Abaikan isi runs/ tetapi pertahankan folder lewat .gitkeep.
+/runs/*
+!/runs/.gitkeep
+
+# --- Bobot & model hasil download/training/export ---
+*.pt
+*.onnx
+*.torchscript
+*.engine
+*.mlpackage
+*.tflite
+*.pb
+
+# --- MLflow (dibuat oleh integrasi Ultralytics) ---
+/mlruns/
+mlflow.db
+
+# --- Cache label Ultralytics (jika muncul di luar dataset/) ---
+*.cache
+
+# --- Virtual environment ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+Desktop.ini
