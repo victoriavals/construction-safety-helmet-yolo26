@@ -1,0 +1,35 @@
+# ============================================================================
+# config.yaml - Konfigurasi terpusat proyek
+# Construction Safety Helmet Detection (Ultralytics YOLO26 small)
+#
+# Semua script di src/ membaca default dari file ini.
+# Argumen CLI (argparse) akan menimpa (override) nilai di sini.
+# Path bersifat RELATIF terhadap root project (jalankan dari root).
+# ============================================================================
+
+# --- Dataset (JANGAN diubah / di-rename) ---
+dataset_dir: dataset
+data_yaml: dataset/data.yaml
+
+# --- Model & task ---
+model: yolo26s.pt        # YOLO26 small (object detection)
+task: detect             # object detection (bukan classify/segment/pose/obb)
+
+# --- Parameter training ---
+imgsz: 640
+epochs: 50
+batch: 8                 # default untuk RTX 4060 Laptop 8 GB (fallback: 4, lalu 2)
+device: 0                # 0 = GPU pertama; gunakan 'cpu' bila tanpa GPU
+workers: 4
+patience: 15
+seed: 42
+amp: true                # mixed precision untuk efisiensi VRAM
+cache: false             # set true hanya bila RAM cukup besar
+
+# --- Output (semua hasil eksperimen disimpan di runs/) ---
+project: runs/train
+name: helmet_yolo26s_baseline
+
+# --- Parameter evaluasi & inference ---
+conf: 0.25               # confidence threshold
+iou: 0.5                 # IoU threshold (NMS)
