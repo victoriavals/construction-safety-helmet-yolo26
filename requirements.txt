@@ -1,0 +1,42 @@
+# ============================================================================
+# requirements.txt - Construction Safety Helmet Detection (Ultralytics YOLO26)
+# ============================================================================
+#
+# PENTING - PyTorch CUDA:
+#   torch / torchvision / torchaudio SENGAJA TIDAK di-pin di sini.
+#   Instal PyTorch dengan dukungan CUDA mengikuti perintah RESMI dari:
+#       https://pytorch.org/get-started/locally/
+#   Pilih perintah sesuai driver NVIDIA + versi CUDA pada mesin Anda.
+#
+#   Contoh (CUDA 12.1 - sesuaikan dengan sistem Anda, JANGAN salin mentah):
+#       pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+#
+#   Verifikasi setelah instal:
+#       python src/check_gpu.py
+#
+#   Lalu baru instal dependency lain:
+#       pip install -r requirements.txt
+# ============================================================================
+
+# --- Core: training, inference, export YOLO ---
+ultralytics>=8.3.0
+
+# --- Computer vision & image I/O ---
+opencv-python>=4.9.0
+pillow>=10.0.0
+
+# --- Data handling & numerik ---
+numpy>=1.26.0
+pandas>=2.1.0
+pyyaml>=6.0
+
+# --- Visualisasi (EDA & plotting) ---
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# --- Utilitas ---
+tqdm>=4.66.0
+
+# --- Notebook (EDA) ---
+jupyter>=1.0.0
+ipykernel>=6.29.0
