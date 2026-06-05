@@ -1,0 +1,2 @@
+# Folder ini menampung seluruh hasil eksperimen (training, tuning, evaluasi).
+# Subfolder dibuat otomatis oleh Ultralytics (mis. runs/train/, runs/val/).
