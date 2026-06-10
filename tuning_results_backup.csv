@@ -1,0 +1,5 @@
+experiment_name,model,epochs,final_batch,imgsz,lr0,weight_decay,precision,recall,mAP50,mAP50-95,best_weights_path,status,error_message
+exp_01_yolo26s_baseline_lr001,yolo26s.pt,50,8,640,0.01,0.0005,0.8475,0.7084,0.7864,0.5078,D:\ML\test-code\construction-safety-helmet-yolo26\runs\tune\exp_01_yolo26s_baseline_lr001\weights\best.pt,success,
+exp_02_yolo26s_lr0005,yolo26s.pt,50,8,640,0.005,0.0005,0.8475,0.7084,0.7864,0.5078,D:\ML\test-code\construction-safety-helmet-yolo26\runs\tune\exp_02_yolo26s_lr0005\weights\best.pt,success,
+exp_03_yolo26s_lr0003,yolo26s.pt,40,8,640,0.003,0.0001,0.8342,0.6849,0.7452,0.4729,D:\ML\test-code\construction-safety-helmet-yolo26\runs\tune\exp_03_yolo26s_lr0003\weights\best.pt,success,
+exp_04_yolo26s_low_epoch,yolo26s.pt,30,8,640,0.005,0.0001,0.8425,0.6791,0.7505,0.4688,D:\ML\test-code\construction-safety-helmet-yolo26\runs\tune\exp_04_yolo26s_low_epoch\weights\best.pt,success,
