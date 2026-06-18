@@ -1,0 +1,1 @@
+Letakkan best.onnx hasil export di sini (lihat README.md langkah 1).
