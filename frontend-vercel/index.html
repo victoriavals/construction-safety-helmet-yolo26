@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deteksi Helm Konstruksi — YOLO26s</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header>
+  <h1>🦺 Deteksi Keselamatan Helm — <span>YOLO26s</span></h1>
+  <p class="sub">Frontend (Vercel) → Backend FastAPI (Hugging Face). Helmet · No-Helmet · Person</p>
+  <div id="apiStatus" class="status loading">⏳ Menghubungi server…</div>
+</header>
+
+<main>
+  <section class="left">
+    <div class="tabs">
+      <button class="tab active" data-tab="image">🖼️ Gambar</button>
+      <button class="tab" data-tab="video">🎞️ Video</button>
+      <button class="tab" data-tab="examples">⭐ Contoh</button>
+    </div>
+
+    <div class="panel active" id="panel-image">
+      <label class="filebtn">Pilih gambar<input type="file" id="imageInput" accept="image/*" hidden></label>
+    </div>
+    <div class="panel" id="panel-video">
+      <label class="filebtn">Pilih video<input type="file" id="videoInput" accept="video/*" hidden></label>
+      <span class="hint">Klip pendek (≤ ~8 dtk) disarankan di server CPU.</span>
+    </div>
+    <div class="panel" id="panel-examples">
+      <p class="hint">Klik salah satu contoh:</p>
+      <div id="exampleGrid" class="examples"></div>
+    </div>
+
+    <div class="viewer">
+      <img id="resultImg" hidden />
+      <video id="resultVideo" controls hidden></video>
+      <div id="viewHint" class="viewhint">Pilih input di atas untuk mulai mendeteksi</div>
+      <div id="spinner" class="spinner" hidden></div>
+    </div>
+  </section>
+
+  <aside class="right">
+    <h2>Hasil Deteksi</h2>
+    <div id="k3warn" class="k3warn" hidden>⚠️ <b>PERHATIAN K3:</b> terdeteksi <span id="k3count">0</span> orang TANPA helm!</div>
+    <div id="counts" class="counts"></div>
+    <div class="meta">
+      <div>Total deteksi: <b id="total">—</b></div>
+      <div>Waktu inferensi: <b id="ms">—</b></div>
+    </div>
+
+    <h3>Pengaturan</h3>
+    <label>Confidence: <b id="confVal">0.25</b>
+      <input type="range" id="conf" min="0.05" max="0.95" step="0.05" value="0.25"></label>
+    <label>IoU (NMS): <b id="iouVal">0.45</b>
+      <input type="range" id="iou" min="0.1" max="0.9" step="0.05" value="0.45"></label>
+
+    <div class="legend">
+      <span><i style="background:#4c72b0"></i>Helmet</span>
+      <span><i style="background:#c44e52"></i>No-Helmet</span>
+      <span><i style="background:#55a868"></i>Person</span>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <p>Model <code>yolo26s</code> · inference di backend FastAPI (Hugging Face) · frontend statis (Vercel).</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
