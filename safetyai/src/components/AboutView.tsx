@@ -40,9 +40,9 @@ export default function AboutView({ language }: AboutViewProps) {
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t.coreModel}</div>
               <div className="text-base font-extrabold text-[#032448]">YOLO26s</div>
               <p className="text-xs text-slate-500 mt-1">
-                {language === "EN" 
-                  ? "Highly optimized single-stage neural anchor model optimized for fast industrial tablets."
-                  : "Model jangkar saraf satu tahap yang sangat dioptimalkan untuk tablet industri cepat."}
+                {language === "EN"
+                  ? "Anchor-free single-stage real-time object detector, trained to detect helmets/PPE on construction sites."
+                  : "Detektor objek real-time satu tahap (anchor-free), dilatih untuk mendeteksi helm/APD di lokasi konstruksi."}
               </p>
             </div>
 
@@ -68,41 +68,48 @@ export default function AboutView({ language }: AboutViewProps) {
           {/* Precision Meter Card */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
             <div className="text-center">
-              <span className="text-4xl font-black text-[#032448] tracking-tight block mb-1">92.4%</span>
+              <span className="text-4xl font-black text-[#032448] tracking-tight block mb-1">84.7%</span>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.precision}</span>
             </div>
             
             {/* Custom linear progressive scale indicator */}
             <div className="w-full bg-slate-100 h-2 mt-6 rounded-full overflow-hidden">
-              <div className="bg-[#032448] h-full rounded-full transition-all duration-1000" style={{ width: "92.4%" }} />
+              <div className="bg-[#032448] h-full rounded-full transition-all duration-1000" style={{ width: "84.7%" }} />
             </div>
           </div>
 
           {/* Recall Meter Card */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition col-span-1">
             <div className="text-center">
-              <span className="text-4xl font-black text-[#032448] tracking-tight block mb-1">89.1%</span>
+              <span className="text-4xl font-black text-[#032448] tracking-tight block mb-1">70.8%</span>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.recall}</span>
             </div>
             
             <div className="w-full bg-slate-100 h-2 mt-6 rounded-full overflow-hidden">
-              <div className="bg-[#032448] h-full rounded-full transition-all duration-1000" style={{ width: "89.1%" }} />
+              <div className="bg-[#032448] h-full rounded-full transition-all duration-1000" style={{ width: "70.8%" }} />
             </div>
           </div>
 
           {/* mAP@50 Card */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center hover:shadow-md transition">
-            <span className="text-3xl font-black text-[#032448] tracking-tight block mb-1">94.2%</span>
+            <span className="text-3xl font-black text-[#032448] tracking-tight block mb-1">78.6%</span>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">mAP@50</span>
           </div>
 
           {/* mAP@50-95 Card */}
           <div className="bg-slate-55 rounded-2xl p-6 border border-slate-200 bg-slate-50 shadow-sm flex flex-col justify-center items-center text-center hover:shadow-md transition">
-            <span className="text-3xl font-black text-[#375e9b] tracking-tight block mb-1">78.5%</span>
+            <span className="text-3xl font-black text-[#375e9b] tracking-tight block mb-1">50.8%</span>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">mAP@50-95</span>
           </div>
         </div>
       </div>
+
+      {/* Catatan sumber metrik */}
+      <p className="text-[11px] text-slate-400 mb-4 text-center">
+        {language === "EN"
+          ? "Metrics measured on the validation set (best.pt, imgsz 640). Test set: mAP@50 64.8%, mAP@50-95 40.5%."
+          : "Metrik diukur pada set validasi (best.pt, imgsz 640). Set uji: mAP@50 64,8%, mAP@50-95 40,5%."}
+      </p>
 
       {/* Verified Status Banner */}
       <div className="bg-[#1f3a5f] text-white rounded-xl p-5 text-center border border-slate-800 shadow-sm flex items-center justify-center gap-3">
