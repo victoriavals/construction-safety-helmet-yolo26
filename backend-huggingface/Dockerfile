@@ -14,6 +14,7 @@ ENV PYTHONUNBUFFERED=1 \
     HOME=/home/appuser \
     YOLO_CONFIG_DIR=/home/appuser/.config/Ultralytics \
     MPLCONFIGDIR=/home/appuser/.config/matplotlib \
+    YOLO_AUTOINSTALL=false \
     MODEL_PATH=model/best.pt
 
 COPY requirements.txt .

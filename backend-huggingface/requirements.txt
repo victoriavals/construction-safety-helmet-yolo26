@@ -4,4 +4,5 @@ python-multipart
 ultralytics>=8.3.0
 opencv-python-headless
 pillow
+pi-heif
 numpy

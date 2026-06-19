@@ -55,3 +55,14 @@ Useful flags: `--allow-cpu` (evaluate/infer/tune when no CUDA), `--dry-run` and 
 ## Conventions for adding code
 
 Keep `dataset/` untouched (verbatim Roboflow export; scripts are read-only against it). All experiment output goes under `runs/` (git-ignored except `.gitkeep`); model weights (`*.pt`, `*.onnx`, etc.) are git-ignored. New scripts should follow the existing pattern: root-relative paths, argparse with sensible defaults, absolute `project=` for Ultralytics, graceful `--allow-cpu` handling, and a written summary in `runs/`.
+
+## Project context, status & web demo
+
+Beyond the training pipeline above, this repo also ships a **web demo**: `safetyai/`
+(React + Vite frontend, bilingual ID/EN) and `backend-huggingface/` (FastAPI inference
+API, deployed to a Hugging Face Docker Space). For carried-over working context — user
+preferences, the REAL trained-model metrics, how to run the full stack locally,
+deployment URLs, and the security hardening that has been applied — read the companion
+doc, which is imported below so it loads automatically:
+
+@docs/CONTEXT.md
