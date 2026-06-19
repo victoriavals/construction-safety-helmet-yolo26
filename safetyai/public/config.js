@@ -15,4 +15,4 @@
 // Alternatif build-time: set variabel VITE_API_BASE (akan dipakai bila
 // window.API_BASE dibiarkan kosong).
 // ============================================================================
-window.API_BASE = location.protocol + "//" + location.hostname + ":7860";
+window.API_BASE = "https://naufalfirdaus-deteksi-helm-api.hf.space";
