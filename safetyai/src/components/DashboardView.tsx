@@ -75,6 +75,10 @@ export default function DashboardView({ language, logs, onNavigate }: DashboardV
         <div>
           <h1 className="text-3xl font-extrabold text-[#032448] tracking-tight">{language === "EN" ? "System Dashboard" : "Dasbor Sistem"}</h1>
           <p className="text-sm text-slate-500 mt-1">{language === "EN" ? "Real-time inference and historical violation metrics." : "Metrik inferensi real-time dan riwayat metrik pelanggaran."}</p>
+          <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wider">
+            <AlertTriangle size={11} className="shrink-0" />
+            {t.demoDataNotice}
+          </span>
         </div>
         
         {/* Search & Actions block */}
