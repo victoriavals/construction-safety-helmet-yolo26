@@ -8,7 +8,9 @@ import { translations } from "../translations";
 import { EXAMPLE_IMAGES, ExampleImage } from "../data";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  predictImage, predictVideo, checkHealth, isApiConfigured,
+  predictImage, predictVideo, isApiConfigured,
+  warmUpBackend, retryWarmUp, subscribeBackendStatus, getBackendStatus,
+  markBackendReady, ERR_BACKEND_ASLEEP, BackendStatus,
 } from "../api";
 
 interface DetectViewProps {
@@ -16,7 +18,7 @@ interface DetectViewProps {
   onAddLog: (newImgUrl: string, helmet: number, noHelmet: number, person: number) => void;
 }
 
-type ServerStatus = "connecting" | "connected" | "error" | "unconfigured";
+type ServerStatus = BackendStatus;
 
 export default function DetectView({ language, onAddLog }: DetectViewProps) {
   const t = translations[language];
@@ -28,7 +30,7 @@ export default function DetectView({ language, onAddLog }: DetectViewProps) {
   const [confidence, setConfidence] = useState<number>(0.25);
   const [iou, setIou] = useState<number>(0.45);
   const [incidentSuccessMessage, setIncidentSuccessMessage] = useState<string>("");
-  const [serverStatus, setServerStatus] = useState<ServerStatus>("connecting");
+  const [serverStatus, setServerStatus] = useState<ServerStatus>(getBackendStatus());
 
   // --- hasil deteksi (dari backend) ---
   const [resultImg, setResultImg] = useState<string>("");        // gambar beranotasi (data URL)
@@ -44,18 +46,11 @@ export default function DetectView({ language, onAddLog }: DetectViewProps) {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const lastImageBlob = useRef<Blob | null>(null); // untuk re-run saat slider diubah
 
-  // --- Health check saat mount ---
+  // --- Ikuti status warm-up backend (dipicu sekali dari App.tsx) ---
   useEffect(() => {
-    let alive = true;
-    if (!isApiConfigured()) {
-      setServerStatus("unconfigured");
-      return;
-    }
-    setServerStatus("connecting");
-    checkHealth().then((ok) => {
-      if (alive) setServerStatus(ok ? "connected" : "error");
-    });
-    return () => { alive = false; };
+    const unsubscribe = subscribeBackendStatus(setServerStatus);
+    warmUpBackend(); // no-op bila warm-up sudah jalan/selesai
+    return unsubscribe;
   }, []);
 
   const resetCounts = () => {
@@ -82,16 +77,16 @@ export default function DetectView({ language, onAddLog }: DetectViewProps) {
       setTotalDetections(data.total ?? 0);
       setTimeMs(data.time_ms ?? null);
       setHasResult(true);
-      setServerStatus("connected");
+      markBackendReady();
     } catch (e: any) {
-      setServerStatus("error");
-      alert(
-        (language === "EN" ? "Failed to process image: " : "Gagal memproses gambar: ") +
-        e.message +
-        (language === "EN"
-          ? "\n(The backend may be starting up. Please try again.)"
-          : "\n(Backend mungkin sedang dimulai. Silakan coba lagi.)")
-      );
+      if (e?.message === ERR_BACKEND_ASLEEP) {
+        alert(t.serverAsleep); // warm-up sudah men-set status "error" sendiri
+      } else {
+        alert(
+          (language === "EN" ? "Failed to process image: " : "Gagal memproses gambar: ") +
+          e.message
+        );
+      }
     } finally {
       setAnalyzing(false);
     }
@@ -129,10 +124,13 @@ export default function DetectView({ language, onAddLog }: DetectViewProps) {
       if (resultVideoUrl) URL.revokeObjectURL(resultVideoUrl);
       setResultVideoUrl(URL.createObjectURL(blob));
       setHasResult(true);
-      setServerStatus("connected");
+      markBackendReady();
     } catch (err: any) {
-      setServerStatus("error");
-      alert((language === "EN" ? "Failed to process video: " : "Gagal memproses video: ") + err.message);
+      if (err?.message === ERR_BACKEND_ASLEEP) {
+        alert(t.serverAsleep); // warm-up sudah men-set status "error" sendiri
+      } else {
+        alert((language === "EN" ? "Failed to process video: " : "Gagal memproses video: ") + err.message);
+      }
     } finally {
       setAnalyzing(false);
     }
@@ -179,8 +177,8 @@ export default function DetectView({ language, onAddLog }: DetectViewProps) {
 
   // --- Konfigurasi tampilan status server ---
   const statusConfig: Record<ServerStatus, { cls: string; dot: string; text: string }> = {
-    connected:    { cls: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500", text: t.serverConnected },
-    connecting:   { cls: "bg-amber-50 text-amber-700 border-amber-200",       dot: "bg-amber-500",   text: t.serverConnecting },
+    ready:        { cls: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500", text: t.serverConnected },
+    waking:       { cls: "bg-amber-50 text-amber-700 border-amber-200",       dot: "bg-amber-500",   text: t.serverWaking },
     error:        { cls: "bg-red-50 text-red-700 border-red-200",             dot: "bg-red-500",     text: t.serverError },
     unconfigured: { cls: "bg-red-50 text-red-700 border-red-200",             dot: "bg-red-500",     text: t.serverUnconfigured },
   };
@@ -191,9 +189,17 @@ export default function DetectView({ language, onAddLog }: DetectViewProps) {
       {/* Status server (NYATA dari health check backend) */}
       <div className="flex items-center gap-2 mb-6">
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold border ${status.cls}`}>
-          <span className={`w-2.5 h-2.5 rounded-full ${status.dot} ${serverStatus === "connected" || serverStatus === "connecting" ? "animate-pulse" : ""}`} />
+          <span className={`w-2.5 h-2.5 rounded-full ${status.dot} ${serverStatus === "ready" || serverStatus === "waking" ? "animate-pulse" : ""}`} />
           {status.text}
         </div>
+        {serverStatus === "error" && (
+          <button
+            onClick={() => retryWarmUp()}
+            className="px-3 py-1.5 rounded-full text-xs font-bold border border-slate-300 text-slate-600 hover:bg-slate-100 transition"
+          >
+            {t.serverRetry}
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
