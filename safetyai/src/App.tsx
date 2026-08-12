@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Shield, Menu, X, User, Globe, AlertCircle, Info, Home as HomeIcon, Eye, LayoutDashboard } from "lucide-react";
 import { SAMPLE_LOGS, ExampleImage } from "./data";
 import { Language, DetectionLog } from "./types";
 import { translations } from "./translations";
+import { warmUpBackend } from "./api";
 
 import HomeView from "./components/HomeView";
 import DetectView from "./components/DetectView";
@@ -25,6 +26,13 @@ export default function App() {
   const [logs, setLogs] = useState<DetectionLog[]>(SAMPLE_LOGS);
   // Mobile responsive navigation state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  // Bangunkan backend SEGERA saat app dibuka. Hugging Face Space gratis tidur
+  // setelah ~48 jam menganggur; memicu warm-up di sini membuat Space menghangat
+  // sambil pengunjung membaca Home, sehingga tab Deteksi tidak perlu menunggu.
+  useEffect(() => {
+    warmUpBackend();
+  }, []);
 
   // Quick helper to insert new logs from Detect Screen
   const handleAddNewLog = (newImgUrl: string, helmet: number, noHelmet: number, person: number) => {
