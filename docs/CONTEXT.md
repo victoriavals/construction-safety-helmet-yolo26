@@ -53,6 +53,18 @@ before relying on them.
   Namespace before `/` must be the username, not the space name.
 - **Frontend:** `cd safetyai && npm run build` → serve the static `dist/` on any host
   (Vercel / VPS / nginx). Set `window.API_BASE` (config.js) to the HF URL for production.
+- **Cold start is real and must stay handled.** A free HF Space sleeps after ~48 h idle
+  and wakes on the first HTTP request, but that request can hang ~60 s (measured
+  2026-08-12: first `GET /` returned nothing after 60 s, the next returned
+  `{"status":"ok"}` instantly). So `safetyai/src/api.ts` deliberately does **not** use a
+  plain one-shot `fetch` for health: `warmUpBackend()` is a singleton that retries
+  `GET /` with an 8 s per-attempt timeout and backoff up to a 120 s budget, publishing
+  `"waking" | "ready" | "error"` to subscribers. `App.tsx` fires it on app mount (so the
+  Space warms while the visitor reads Home, not when they open Detect), and
+  `predictImage`/`predictVideo` `await ensureAwake()` so an upload during cold start
+  waits instead of failing. Don't "simplify" this back into a single fetch — the UI will
+  falsely report a dead server. Note `"error"` here usually means the Space is **paused**
+  (needs a manual restart in the HF dashboard), not merely asleep.
 
 ## Security hardening (already applied; QA 22/22 local + live)
 Backend (`backend-huggingface/app.py` v1.1 + `Dockerfile`):
