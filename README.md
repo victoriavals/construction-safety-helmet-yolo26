@@ -1,5 +1,10 @@
 # Construction Safety Helmet Detection using YOLO26S
 
+Frontend aktif ada di [`safetyai/`](safetyai/README.md), kini memakai **Next.js + React**.
+Lihat [audit UI/UX dan screenshot](docs/uiux/AUDIT.md) serta
+[tooling UI global dan rekomendasi skill/MCP](docs/uiux/GLOBAL-TOOLING.md).
+Build frontend menggunakan server Next.js; konfigurasi deployment statis Vite lama perlu diperbarui.
+
 Proyek ini melatih model **YOLO26S** (`yolo26s.pt`) untuk mendeteksi objek
 keselamatan konstruksi dari dataset berformat **YOLO detection**. Alur kerja
 menggabungkan **Jupyter Notebook untuk EDA** dan **script Python modular** untuk
