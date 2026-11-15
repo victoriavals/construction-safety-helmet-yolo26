@@ -21,15 +21,15 @@ before relying on them.
 - The model is **conservative** (precision ≫ recall → it misses some objects). Tuning
   confirmed the baseline config is best. Note: Ultralytics `optimizer='auto'` IGNORES a
   user-set `lr0` — this explains why tuning experiments looked identical.
-- The SafetyAI **About** page shows these REAL numbers; the **Dashboard** is clearly
-  labelled illustrative demo data (no real scan history exists yet).
+- The SafetyAI **Guide & Model** page shows these REAL numbers. The **Dashboard**
+  separates illustrative demo fixtures from real browser-local scan summaries.
 
 ## Apps in this repo (beyond the training pipeline)
-- **`safetyai/`** — the active frontend: React + Vite + TypeScript, bilingual ID/EN,
-  fully responsive (Home / Detect / Dashboard / About). It replaced an older static
+- **`safetyai/`** — the active frontend: Next.js + React + TypeScript, bilingual ID/EN,
+  responsive with App Router URLs (`/`, `/detect`, `/about`). It replaced an older static
   `frontend-vercel/` (now deleted). It performs **no in-browser inference** — it sends
   images/video to the backend. Backend URL comes from `safetyai/public/config.js`
-  (`window.API_BASE`, runtime override) and wins over build-time `VITE_API_BASE`.
+  (`window.API_BASE`, runtime override) and wins over build-time `NEXT_PUBLIC_API_BASE`.
 - **`backend-huggingface/`** — FastAPI inference API (ultralytics). Endpoints:
   `GET /` (health), `POST /predict/image`, `POST /predict/video`.
 
@@ -51,15 +51,14 @@ before relying on them.
   then `hf upload <user>/deteksi-helm-api ./backend-huggingface . --repo-type space`
   (`best.pt` handled by LFS automatically). Re-run that `hf upload` to push updates.
   Namespace before `/` must be the username, not the space name.
-- **Frontend:** `cd safetyai && npm run build` → serve the static `dist/` on any host
-  (Vercel / VPS / nginx). Set `window.API_BASE` (config.js) to the HF URL for production.
+- **Frontend:** `cd safetyai && npm run build && npm run start` runs a Next.js Node server. On Vercel use the Next.js preset and Root Directory `safetyai`. The old static `dist/` deployment no longer applies. Set `window.API_BASE` in `public/config.js`, or clear it to use `NEXT_PUBLIC_API_BASE`.
 - **Cold start is real and must stay handled.** A free HF Space sleeps after ~48 h idle
   and wakes on the first HTTP request, but that request can hang ~60 s (measured
   2026-08-12: first `GET /` returned nothing after 60 s, the next returned
   `{"status":"ok"}` instantly). So `safetyai/src/api.ts` deliberately does **not** use a
   plain one-shot `fetch` for health: `warmUpBackend()` is a singleton that retries
   `GET /` with an 8 s per-attempt timeout and backoff up to a 120 s budget, publishing
-  `"waking" | "ready" | "error"` to subscribers. `App.tsx` fires it on app mount (so the
+  `"waking" | "ready" | "error"` to subscribers. `WorkspaceProvider` fires it on app mount (so the
   Space warms while the visitor reads Home, not when they open Detect), and
   `predictImage`/`predictVideo` `await ensureAwake()` so an upload during cold start
   waits instead of failing. Don't "simplify" this back into a single fetch — the UI will
@@ -77,9 +76,7 @@ Backend (`backend-huggingface/app.py` v1.1 + `Dockerfile`):
   frontend domain in prod), `RATE_LIMIT`/`RATE_WINDOW` (60/60s), `MAX_IMAGE_MB` (10),
   `MAX_VIDEO_MB` (40), `ENABLE_DOCS` (0).
 
-Frontend: `safetyai/vercel.json` (CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy,
-Permissions-Policy) + `safetyai/vite.config.ts` modulePreload polyfill disabled so a
-strict `script-src 'self'` CSP works. Verify the CSP in a real browser after deploy.
+Frontend (redesigned 2026-11-15): `safetyai/next.config.ts` keeps security headers; `src/proxy.ts` adds a per-request CSP nonce for Next.js. Production scripts do not use unsafe-inline or unsafe-eval; development enables unsafe-eval as required by Next.js. Fonts/images are local. File validation, cancellation, request timeouts, and backend warm-up remain handled. Playwright checks production CSP and axe on desktop/mobile. See `docs/uiux/AUDIT.md` and `safetyai/README.md`.
 
 ## Not in git (rebuild/re-fetch on a new machine)
 `dataset/`, `dataset.zip`, `runs/`, `*.pt`/`*.onnx` weights, `.venv/`, and
