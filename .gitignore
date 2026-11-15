@@ -44,6 +44,15 @@ dist/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env.local
+.env.*.local
+playwright-report/
+test-results/
+.playwright-mcp/
 
 # --- Jupyter ---
 .ipynb_checkpoints/
