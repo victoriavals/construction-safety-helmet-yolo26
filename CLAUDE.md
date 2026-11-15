@@ -33,12 +33,12 @@ Web demo (see the bottom section for context):
 uvicorn app:app --host 0.0.0.0 --port 7860 --app-dir backend-huggingface   :: FastAPI inference API
 cd safetyai && npm install && npm run dev                                 :: frontend -> http://localhost:3000
 cd safetyai && npm run lint                                               :: tsc --noEmit (the only lint in the repo)
-cd safetyai && npm run build                                              :: static bundle -> safetyai/dist/
+cd safetyai && npm run build                                              :: Next.js production build -> safetyai/.next/
 python build_presentation.py                                              :: PPTX + script -> presentasi/
 ```
 
 - **Setup:** install PyTorch **CUDA** first per https://pytorch.org/get-started/locally/ (intentionally *not* pinned in `requirements.txt`), then `pip install -r requirements.txt`.
-- **No Python tests, linter, or CI exist.** There is no `pytest`, CI, or packaging config — running a script is the only verification on the Python side. The frontend is the only part with tooling (`npm run lint` = `tsc --noEmit`, `npm run build`). If you add Python tests, add the tooling too.
+- **No Python tests, linter, or CI exist.** There is no `pytest`, CI, or packaging config — running a script is the only verification on the Python side. The frontend has `npm run lint` (TypeScript), `npm run build`, and `npm run test:e2e` (Playwright against a production build, desktop/mobile). If you add Python tests, add the tooling too.
 - **Notebooks mirror `src/`.** `notebooks/` holds an executed, inline-visualization version of the pipeline (`01_check_gpu`, `02_eda`, `02b_preprocessing`, `03_train` … `07_export_model`) — the surface the user actually works in. Run in VS Code / Jupyter, or headless: `jupyter nbconvert --to notebook --execute --inplace notebooks/02_eda.ipynb`. Use the `.venv` Jupyter kernel registered as **`helmet-yolo26`** (global Python is CPU-only). Their viz cells auto-export figures to `presentation_figures/` via a `plt.show` hook in each Setup cell, so re-running a notebook refreshes those PNGs.
 
 ## Architecture
@@ -53,7 +53,7 @@ python build_presentation.py                                              :: PPT
 
 **Figures flow notebooks → `presentation_figures/` → `presentasi/`.** The Setup cell monkey-patches `plt.show` to auto-save each figure as `presentation_figures/<nb-name>_NN.png`, and it **deletes all existing `<nb-name>_*.png` first** — so re-running a notebook that emits fewer plots than before drops the extras, and figure numbering shifts. Unlike `runs/`, `presentation_figures/` **is tracked in git** (33 PNGs), so those deletions show up as real diffs. `build_presentation.py` then reads those PNGs plus files under `runs/` and writes `presentasi/Presentasi_Helmet_YOLO26.pptx` + `Script_Presentasi.md`; per its docstring it runs on **global** Python (needs `python-pptx`), not the `.venv`. Missing images degrade to a red placeholder box instead of failing.
 
-**Frontend ↔ backend contract.** `safetyai/src/api.ts` resolves the base URL as `window.API_BASE` (runtime, from `safetyai/public/config.js`) → `VITE_API_BASE` (build-time) → empty, then calls `GET /` (health), `POST /predict/image`, `POST /predict/video` with `?conf=&iou=` — matching `backend-huggingface/app.py`. Because `public/config.js` is copied verbatim into `dist/`, the deployed backend URL can be changed without rebuilding; it also defaults to the current page host on port 7860 for local/LAN use. Changing a response shape means editing both `app.py` and `api.ts`.
+**Frontend/backend contract.** `safetyai/src/api.ts` resolves the base URL as `window.API_BASE` (runtime, `safetyai/public/config.js`), then `NEXT_PUBLIC_API_BASE` (build time), then empty. It calls `GET /` (health), `POST /predict/image`, and `POST /predict/video` with `?conf=&iou=`, matching `backend-huggingface/app.py`. Runtime config does not bypass the CSP in `src/proxy.ts`. The app uses Next.js App Router (`/`, `/detect`, `/about`) and requires Next.js/Node deployment instead of a static `dist/` host. Browser history stores up to 100 summaries without persisting image/video payloads. Keep demo fixtures separate from real logs. See `safetyai/README.md` and `docs/uiux/AUDIT.md`.
 
 **Cross-cutting conventions (replicated in every script — keep them consistent):**
 
@@ -69,7 +69,7 @@ python build_presentation.py                                              :: PPT
 - **`data.yaml` path resolution.** The Roboflow export defines `train/val/test` as `../train/images` etc. with no `path:` key. The project scripts handle the `../` prefix and `valid`/`val` themselves, but a raw `yolo detect ...` CLI invocation may not — add a `path:` key pointing at `dataset/`, or rewrite the entries to `train/images`, `valid/images`, `test/images`, if a run can't find images.
 - The dataset contains a few stray segmentation-style labels (not 5-column boxes); `eda.py`'s `_parse_boxes` and Ultralytics both silently drop them.
 - `yolo26s.pt` needs an Ultralytics version with YOLO26 support; weights auto-download on first use (needs internet).
-- **Two static-frontend folders exist; only `safetyai/` is active.** The current frontend is `safetyai/` (React + Vite, see bottom section). `webdemo/` is an older plain-HTML/JS static demo, and docs may still mention a now-deleted `frontend-vercel/` — don't edit `webdemo/` expecting it to be the live app.
+- **Two frontend folders exist; only `safetyai/` is active.** The current frontend is `safetyai/` (Next.js + React, see bottom section). `webdemo/` is an older plain-HTML/JS static demo, and docs may still mention a now-deleted `frontend-vercel/` — don't edit `webdemo/` expecting it to be the live app.
 
 ## Conventions for adding code
 
@@ -78,7 +78,7 @@ Keep `dataset/` untouched (verbatim Roboflow export; scripts are read-only again
 ## Project context, status & web demo
 
 Beyond the training pipeline above, this repo also ships a **web demo**: `safetyai/`
-(React + Vite frontend, bilingual ID/EN) and `backend-huggingface/` (FastAPI inference
+(Next.js + React frontend, bilingual ID/EN) and `backend-huggingface/` (FastAPI inference
 API, deployed to a Hugging Face Docker Space). For carried-over working context — user
 preferences, the REAL trained-model metrics, how to run the full stack locally,
 deployment URLs, and the security hardening that has been applied — read the companion
