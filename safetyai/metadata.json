@@ -1,6 +1,6 @@
 {
   "name": "SafetyAI",
-  "description": "AI-powered Safety and Hardhat Detection Dashboard with real-time analytics, violation logs, and bilingual UI support (EN/ID).",
+  "description": "Next.js workspace for helmet inspection, reviewable image and video predictions, browser-local scan summaries, and bilingual UI (ID/EN).",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
