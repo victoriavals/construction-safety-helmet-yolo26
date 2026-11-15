@@ -21,10 +21,46 @@ export const getScanStatus = (
       ? "clear"
       : "empty";
 export const EXAMPLES = [
-  { id: 1, filename: "area-konstruksi.jpg", url: "/examples/example1.jpg" },
-  { id: 2, filename: "inspeksi-lapangan.jpg", url: "/examples/example2.jpg" },
-  { id: 3, filename: "pekerja-proyek.jpg", url: "/examples/example3.jpg" },
-  { id: 4, filename: "pemeriksaan-helm.jpg", url: "/examples/example4.jpg" },
+  {
+    id: 1,
+    filename: "area-konstruksi.jpg",
+    url: "/examples/example1.jpg",
+    title: { ID: "Area konstruksi", EN: "Construction site" },
+    description: {
+      ID: "Beberapa pekerja di lokasi proyek.",
+      EN: "Several workers on a construction site.",
+    },
+  },
+  {
+    id: 2,
+    filename: "inspeksi-lapangan.jpg",
+    url: "/examples/workers-team-v2.jpg",
+    title: { ID: "Tim dengan helm", EN: "Team wearing helmets" },
+    description: {
+      ID: "Empat pekerja dengan helm dan rompi.",
+      EN: "Four workers wearing helmets and safety vests.",
+    },
+  },
+  {
+    id: 3,
+    filename: "pekerja-proyek.jpg",
+    url: "/examples/workers-helmet-use-v2.jpg",
+    title: { ID: "Variasi penggunaan helm", EN: "Different helmet use" },
+    description: {
+      ID: "Tim dengan helm dipakai dan dibawa.",
+      EN: "A team with helmets worn and carried.",
+    },
+  },
+  {
+    id: 4,
+    filename: "pemeriksaan-helm.jpg",
+    url: "/examples/workers-inspection-v2.jpg",
+    title: { ID: "Inspeksi pekerjaan", EN: "Site inspection" },
+    description: {
+      ID: "Dua pekerja meninjau rencana proyek.",
+      EN: "Two workers reviewing the project plans.",
+    },
+  },
 ];
 // Fixture terisolasi; tidak pernah dimasukkan ke riwayat pengguna.
 export const DEMO_LOGS: ScanLog[] = [

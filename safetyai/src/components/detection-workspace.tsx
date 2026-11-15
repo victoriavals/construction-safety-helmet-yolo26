@@ -14,6 +14,7 @@ import {
   ImagePlus,
   Info,
   LoaderCircle,
+  Maximize2,
   Save,
   ScanLine,
   ShieldAlert,
@@ -42,6 +43,13 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useWorkspace } from "./workspace-provider";
 import { BackendIndicator } from "./app-shell";
 import { ScanStatusBadge } from "./dashboard";
@@ -58,7 +66,7 @@ type Result =
   | { kind: "image"; data: PredictImageResult; log: ScanLog }
   | { kind: "video"; url: string };
 export default function DetectionWorkspace() {
-  const { text, backendStatus, saveLog } = useWorkspace();
+  const { text, language, backendStatus, saveLog } = useWorkspace();
   const [mode, setMode] = useState("image");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -71,11 +79,24 @@ export default function DetectionWorkspace() {
   const [view, setView] = useState("annotated");
   const [confidence, setConfidence] = useState(0.25);
   const [iou, setIou] = useState(0.45);
+  const [expandedImage, setExpandedImage] = useState<{
+    src: string;
+    title: string;
+    description: string;
+  } | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const previewHeading = useRef<HTMLHeadingElement>(null);
+  const previewTrigger = useRef<HTMLButtonElement | null>(null);
   const request = useRef<AbortController | null>(null);
   const requestId = useRef(0);
   const busy = analyzing || loadingExample;
   const imageResult = result?.kind === "image" ? result : null;
+  const displayedImage =
+    imageResult && view === "annotated"
+      ? imageResult.data.annotated
+      : mode === "image"
+        ? preview
+        : "";
   useEffect(() => {
     if (!file) {
       setPreview("");
@@ -144,6 +165,15 @@ export default function DetectionWorkspace() {
       return;
     }
     setFile(candidate);
+    requestAnimationFrame(() => {
+      previewHeading.current?.focus({ preventScroll: true });
+      previewHeading.current?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+    });
   }
   function switchMode(value: string) {
     if (busy) return;
@@ -445,8 +475,8 @@ export default function DetectionWorkspace() {
                     <div>
                       <span>
                         {text(
-                          "Belum punya gambar? Coba contoh ini.",
-                          "No image handy? Try a sample.",
+                          "Pilih foto pekerja untuk dianalisis, atau perbesar untuk melihat detailnya.",
+                          "Choose a worker photo to analyze, or enlarge it to inspect the details.",
                         )}
                       </span>
                       {loadingExample ? (
@@ -455,19 +485,63 @@ export default function DetectionWorkspace() {
                     </div>
                     <div className="example-grid">
                       {EXAMPLES.map((example, index) => (
-                        <button
+                        <article
                           key={example.id}
-                          disabled={busy}
-                          onClick={() => void selectExample(example)}
-                          aria-label={`${text("Pilih contoh", "Choose sample")} ${index + 1}`}
-                          aria-pressed={file?.name === example.filename}
+                          className="example-card"
+                          data-selected={file?.name === example.filename}
                         >
-                          <img src={example.url} alt="" loading="lazy" />
-                          <span>
-                            {text("Contoh", "Sample")} 0{index + 1}
-                            <ArrowUpRight />
-                          </span>
-                        </button>
+                          <button
+                            className="example-pick"
+                            disabled={busy}
+                            onClick={() => void selectExample(example)}
+                            aria-label={`${text("Pilih contoh", "Choose sample")} ${index + 1}`}
+                            aria-describedby={`example-title-${example.id} example-description-${example.id}`}
+                            aria-pressed={file?.name === example.filename}
+                          >
+                            <img
+                              src={example.url}
+                              alt=""
+                              loading="lazy"
+                              width={640}
+                              height={640}
+                            />
+                            <div className="example-caption">
+                              <span className="example-number">
+                                {text("Contoh", "Sample")} 0{index + 1}
+                              </span>
+                              <strong id={`example-title-${example.id}`}>
+                                {example.title[language]}
+                              </strong>
+                              <p id={`example-description-${example.id}`}>
+                                {example.description[language]}
+                              </p>
+                              <span className="example-action">
+                                {file?.name === example.filename
+                                  ? text("Gambar dipilih", "Image selected")
+                                  : text("Pilih gambar", "Choose image")}
+                                <ArrowRight />
+                              </span>
+                            </div>
+                          </button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="example-expand"
+                            disabled={busy}
+                            aria-label={`${text("Perbesar contoh", "Enlarge sample")} ${index + 1}`}
+                            aria-describedby={`example-title-${example.id}`}
+                            onClick={(event) => {
+                              previewTrigger.current = event.currentTarget;
+                              setExpandedImage({
+                                src: example.url,
+                                title: example.title[language],
+                                description: example.description[language],
+                              });
+                            }}
+                          >
+                            <Maximize2 />
+                          </Button>
+                        </article>
                       ))}
                     </div>
                   </div>
@@ -506,7 +580,11 @@ export default function DetectionWorkspace() {
           <section className="panel viewer-panel" aria-busy={analyzing}>
             <div className="panel-header">
               <div>
-                <h2>
+                <h2
+                  ref={previewHeading}
+                  tabIndex={-1}
+                  className="preview-heading"
+                >
                   {result
                     ? text("Hasil analisis", "Analysis result")
                     : text("Pratinjau sumber", "Source preview")}
@@ -525,24 +603,44 @@ export default function DetectionWorkspace() {
                         )}
                 </p>
               </div>
-              {imageResult ? (
-                <ToggleGroup
-                  type="single"
-                  value={view}
-                  onValueChange={(value) => {
-                    if (value) setView(value);
-                  }}
-                  className="source-switch"
-                  aria-label={text("Tampilan gambar", "Image view")}
-                >
-                  <ToggleGroupItem value="original">
-                    {text("Asli", "Original")}
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="annotated">
-                    {text("Hasil AI", "AI result")}
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              ) : null}
+              <div className="viewer-tools">
+                {imageResult ? (
+                  <ToggleGroup
+                    type="single"
+                    value={view}
+                    onValueChange={(value) => {
+                      if (value) setView(value);
+                    }}
+                    className="source-switch"
+                    aria-label={text("Tampilan gambar", "Image view")}
+                  >
+                    <ToggleGroupItem value="original">
+                      {text("Asli", "Original")}
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="annotated">
+                      {text("Hasil AI", "AI result")}
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                ) : null}
+                {displayedImage ? (
+                  <Button
+                    variant="outline"
+                    disabled={busy}
+                    onClick={(event) => {
+                      previewTrigger.current = event.currentTarget;
+                      setExpandedImage({
+                        src: displayedImage,
+                        title: text("Pratinjau gambar", "Image preview"),
+                        description: file?.name ?? "",
+                      });
+                    }}
+                    aria-label={text("Perbesar pratinjau", "Enlarge preview")}
+                  >
+                    <Maximize2 data-icon="inline-start" />
+                    {text("Perbesar", "Enlarge")}
+                  </Button>
+                ) : null}
+              </div>
             </div>
             <div className={`media-viewer ${file ? "with-media" : ""}`}>
               {result?.kind === "video" ? (
@@ -562,11 +660,7 @@ export default function DetectionWorkspace() {
                 />
               ) : file && preview ? (
                 <img
-                  src={
-                    imageResult && view === "annotated"
-                      ? imageResult.data.annotated
-                      : preview
-                  }
+                  src={displayedImage}
                   alt={
                     imageResult && view === "annotated"
                       ? text(
@@ -913,6 +1007,36 @@ export default function DetectionWorkspace() {
           </Button>
         </div>
       ) : null}
+      <Dialog
+        open={!!expandedImage}
+        onOpenChange={(open) => {
+          if (!open) setExpandedImage(null);
+        }}
+      >
+        <DialogContent
+          className="image-preview-dialog"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            previewTrigger.current?.focus();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {expandedImage?.title ??
+                text("Pratinjau gambar", "Image preview")}
+            </DialogTitle>
+            <DialogDescription>{expandedImage?.description}</DialogDescription>
+          </DialogHeader>
+          {expandedImage ? (
+            <div className="expanded-image">
+              <img
+                src={expandedImage.src}
+                alt={expandedImage.description || expandedImage.title}
+              />
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

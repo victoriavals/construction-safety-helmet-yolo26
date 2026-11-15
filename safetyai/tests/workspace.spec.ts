@@ -56,6 +56,105 @@ async function visit(page: Page, route: string) {
   await expect(page.getByRole("main")).toHaveAttribute("aria-busy", "false");
   return response;
 }
+test("foto contoh tampil besar dan keempatnya dapat dipilih untuk analisis", async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const calls = await backend(page);
+  await visit(page, "/detect");
+  const filenames = [
+    "area-konstruksi.jpg",
+    "inspeksi-lapangan.jpg",
+    "pekerja-proyek.jpg",
+    "pemeriksaan-helm.jpg",
+  ];
+  const paths = [
+    "/examples/example1.jpg",
+    "/examples/workers-team-v2.jpg",
+    "/examples/workers-helmet-use-v2.jpg",
+    "/examples/workers-inspection-v2.jpg",
+  ];
+  for (let index = 0; index < 4; index++) {
+    const choose = page.getByRole("button", {
+      name: `Pilih contoh ${index + 1}`,
+      exact: true,
+    });
+    const image = choose.locator("img");
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toHaveJSProperty("naturalWidth", 640);
+    await expect(image).toHaveAttribute("src", paths[index]);
+    const bounds = await image.boundingBox();
+    expect(bounds!.height).toBeGreaterThanOrEqual(
+      testInfo.project.name === "mobile" ? 100 : 180,
+    );
+    await choose.click();
+    await expect(
+      page.getByRole("heading", { name: filenames[index], exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Pratinjau sumber", exact: true }),
+    ).toBeFocused();
+    await expect(
+      page.getByAltText("Pratinjau gambar yang dipilih", { exact: true }),
+    ).toBeInViewport();
+    expect(calls).toHaveLength(index);
+    await page
+      .getByRole("button", { name: "Jalankan analisis", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Simpan ke riwayat", exact: true }),
+    ).toBeVisible();
+    expect(calls).toHaveLength(index + 1);
+  }
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test("perbesar foto tidak menjalankan analisis dan fokus kembali setelah ditutup", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const calls = await backend(page);
+  await visit(page, "/detect");
+  const trigger = page.getByRole("button", {
+    name: "Perbesar contoh 3",
+    exact: true,
+  });
+  await trigger.click();
+  const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByRole("heading", {
+      name: "Variasi penggunaan helm",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(dialog.getByRole("img")).toHaveJSProperty("naturalWidth", 640);
+  const imageBounds = await dialog.getByRole("img").boundingBox();
+  expect(imageBounds!.height).toBeGreaterThan(400);
+  expect(calls).toHaveLength(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "Jalankan analisis", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Pilih contoh 3", exact: true })
+    .click();
+  const previewTrigger = page.getByRole("button", {
+    name: "Perbesar pratinjau",
+    exact: true,
+  });
+  await previewTrigger.click();
+  await expect(dialog.getByRole("img")).toHaveAttribute("src", /^blob:/);
+  await page.keyboard.press("Escape");
+  await expect(previewTrigger).toBeFocused();
+  expect(calls).toHaveLength(0);
+});
+
 test("data nyata kosong; demo terpisah, filter dan CSV konsisten", async ({
   page,
 }) => {
@@ -75,7 +174,9 @@ test("data nyata kosong; demo terpisah, filter dan CSV konsisten", async ({
     4,
   );
   expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
   ).toBe(true);
   await page
     .getByLabel("Filter status", { exact: true })
@@ -143,7 +244,9 @@ test("unggah, atur ambang, analisis, simpan, reload dan detail", async ({
   await page.reload();
   await expect(page.getByText("example1.jpg", { exact: true })).toBeVisible();
   expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
   ).toBe(true);
   await page
     .getByRole("button", { name: "Lihat detail example1.jpg", exact: true })

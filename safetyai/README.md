@@ -62,7 +62,7 @@ Data demo terpisah dan tidak masuk riwayat nyata. localStorage `safetyai.scans.v
 ```powershell
 npm run lint       # pemeriksaan TypeScript
 npm run build      # build Next.js produksi
-npm run test:e2e   # 11 skenario × 2 viewport, membutuhkan Microsoft Edge
+npm run test:e2e   # 13 skenario × 2 viewport, membutuhkan Microsoft Edge
 npm audit
 ```
 
@@ -101,5 +101,6 @@ Referensi: [konfigurasi build Vercel](https://vercel.com/docs/builds/configure-a
 Font di-bundle lokal. Komponen React Bits dapat ditambahkan melalui registry `@react-bits` pada `components.json`. GSAP/Lottie/Rive tersedia sebagai tooling global namun tidak dimuat dalam aplikasi tanpa kebutuhan fitur.
 
 - [Audit UI/UX dan bukti screenshot](../docs/uiux/AUDIT.md)
+- [Perbaikan ukuran preview dan foto contoh](../docs/uiux/PREVIEW-FIX.md)
 - [Instalasi global dan rekomendasi skill/MCP](../docs/uiux/GLOBAL-TOOLING.md)
 - [Token dan aturan UI](DESIGN.md)
