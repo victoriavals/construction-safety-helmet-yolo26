@@ -6,13 +6,11 @@
 //   (tanpa garis miring di akhir), contoh:
 //     window.API_BASE = "https://namauser-deteksi-helm-api.hf.space";
 //
-// PENGEMBANGAN LOKAL/LAN: secara otomatis mengikuti host halaman saat ini
-//   pada port 7860 — sehingga berfungsi baik dibuka via localhost maupun
-//   alamat IP jaringan (mis. http://100.70.248.50:3000 -> backend di
-//   http://100.70.248.50:7860). Pastikan backend dijalankan dengan
-//   `--host 0.0.0.0` agar dapat diakses dari perangkat lain.
+// LOKAL: isi "http://localhost:7860" untuk memakai backend lokal.
+// Untuk akses LAN, gunakan alamat backend yang dapat dijangkau perangkat Anda.
 //
-// Alternatif build-time: set variabel VITE_API_BASE (akan dipakai bila
+// Alternatif build-time: set variabel NEXT_PUBLIC_API_BASE (akan dipakai bila
 // window.API_BASE dibiarkan kosong).
+// CSP di src/proxy.ts juga harus mengizinkan host backend tersebut.
 // ============================================================================
 window.API_BASE = "https://naufalfirdaus-deteksi-helm-api.hf.space";
