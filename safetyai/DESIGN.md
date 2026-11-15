@@ -33,6 +33,10 @@ Font lokal: Plus Jakarta Sans Variable, IBM Plex Mono untuk ID/parameter. Ukuran
 - Jangan menambahkan GSAP, Lottie, Rive, atau efek WebGL ke bundle tanpa fungsi yang jelas untuk pengguna.
 - Label kelas selalu memakai teks; hitungan kelas bukan estimasi pekerja unik.
 
+## Logo
+
+Gunakan simbol PNG transparan `public/brand/safetyai-mark-v1.png` melalui komponen `BrandLogo`. Simbol menggabungkan helm konstruksi dan perisai. Wordmark tetap berupa teks Plus Jakarta Sans; tersedia susunan sidebar, header mobile, dan footer. Favicon memakai simbol yang sama. Panduan dan prompt sumber ada di [logo SafetyAI](../docs/brand/safetyai-logo.md).
+
 ## Aksesibilitas dan privasi
 
 Skip link, label input, fokus terlihat, tombol berikon bernama, judul dialog, Escape/focus restore, `aria-current`, status live, `aria-busy`, dan tabel grafik menjadi bagian sistem. Lakukan axe serta pengecekan keyboard setelah perubahan kontrol.

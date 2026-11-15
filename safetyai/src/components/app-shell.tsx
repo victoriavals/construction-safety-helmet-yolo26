@@ -7,7 +7,6 @@ import {
   ArrowUpRight,
   ChevronRight,
   CircleHelp,
-  HardHat,
   LayoutDashboard,
   Menu,
   ScanLine,
@@ -24,6 +23,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useWorkspace } from "./workspace-provider";
 import { retryWarmUp } from "@/api";
+import { BrandLogo } from "./brand-logo";
 
 export function BackendIndicator({ expanded = false }: { expanded?: boolean }) {
   const { backendStatus, text } = useWorkspace();
@@ -75,16 +75,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link
         href="/"
         className="brand"
-        aria-label="SafetyAI — overview"
+        aria-label={text("SafetyAI — ringkasan", "SafetyAI — overview")}
         onClick={() => setOpen(false)}
       >
-        <span className="brand-mark">
-          <HardHat />
-        </span>
-        <span>
-          Safety<span className="brand-light">AI</span>
-          <small>CONSTRUCTION INTELLIGENCE</small>
-        </span>
+        <BrandLogo />
       </Link>
       <div className="workspace-label">WORKSPACE</div>
       <nav
@@ -163,9 +157,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {navigation}
               </SheetContent>
             </Sheet>
+            <Link
+              href="/"
+              className="mobile-brand"
+              aria-label={text("SafetyAI — ringkasan", "SafetyAI — overview")}
+            >
+              <BrandLogo variant="header" />
+            </Link>
             <span className="breadcrumb-workspace">Workspace</span>
             <ChevronRight />
-            <span>{current?.label ?? "SafetyAI"}</span>
+            <span className="breadcrumb-page">
+              {current?.label ?? "SafetyAI"}
+            </span>
           </div>
           <div className="topbar-tools">
             <BackendIndicator />
@@ -197,13 +200,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           {children}
         </main>
         <footer className="workspace-footer">
-          <span>
-            <ShieldCheck />
-            {text(
-              "Dibangun untuk keselamatan di lapangan",
-              "Built for on-site safety",
-            )}
-          </span>
+          <div className="footer-identity">
+            <Link
+              href="/"
+              aria-label={text("SafetyAI — ringkasan", "SafetyAI — overview")}
+            >
+              <BrandLogo variant="footer" />
+            </Link>
+            <span className="footer-tagline">
+              {text(
+                "Dibangun untuk keselamatan di lapangan",
+                "Built for on-site safety",
+              )}
+            </span>
+          </div>
           <Link href="/about#privacy">
             {text("Privasi & penyimpanan", "Privacy & storage")}
             <ArrowUpRight />

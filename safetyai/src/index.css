@@ -191,25 +191,6 @@ summary:focus-visible,
   letter-spacing: -1.1px;
   line-height: 1.2;
 }
-.brand-mark {
-  display: flex;
-  width: 37px;
-  height: 39px;
-  align-items: center;
-  justify-content: center;
-  color: #172a40;
-  background: var(--amber);
-  border-radius: 11px 11px 11px 3px;
-}
-.brand-mark svg {
-  width: 25px;
-  height: 25px;
-  stroke-width: 1.8;
-}
-.brand-light {
-  font-weight: 450;
-  color: #dce5ef;
-}
 .brand small {
   display: block;
   font-size: 6.7px;
@@ -426,6 +407,9 @@ summary:focus-visible,
   box-shadow: 0 1px 4px #142c3f10;
 }
 .mobile-menu {
+  display: none;
+}
+.mobile-brand {
   display: none;
 }
 .workspace-main {
@@ -1175,6 +1159,11 @@ select {
 .workspace-footer svg {
   width: 13px;
   height: 13px;
+}
+.footer-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 .text-link {
   display: inline-flex;
@@ -2000,6 +1989,17 @@ input[type="range"] {
   }
   .mobile-menu {
     display: inline-flex;
+  }
+  .mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .breadcrumb-page {
+    display: none;
+  }
+  .footer-identity .footer-tagline {
+    display: none;
   }
   .topbar {
     height: 68px;

@@ -1,0 +1,113 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.logo .mark {
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+  width: 48px;
+  height: 48px;
+}
+
+.logo .type {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.logo .wordmark {
+  display: block;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -1.1px;
+  line-height: 1.15;
+  color: #f7f8fa;
+}
+
+.logo .wordmark .ai {
+  display: inline;
+  color: #efbb66;
+  font-weight: 650;
+}
+
+.logo .tagline {
+  display: block;
+  margin: 0;
+  color: #afbdcf;
+  font-size: 6.5px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.header,
+.footer {
+  gap: 7px;
+}
+
+.header .mark {
+  width: 30px;
+  height: 30px;
+}
+
+.footer .mark {
+  width: 26px;
+  height: 26px;
+}
+
+.header .wordmark,
+.footer .wordmark {
+  color: #172d46;
+  font-size: 18px;
+  letter-spacing: -0.65px;
+}
+
+.header .wordmark .ai,
+.footer .wordmark .ai {
+  color: #94621e;
+}
+
+@media (max-width: 1180px) {
+  .sidebar {
+    gap: 8px;
+  }
+
+  .sidebar .mark {
+    width: 44px;
+    height: 44px;
+  }
+
+  .sidebar .wordmark {
+    font-size: 24px;
+  }
+
+  .sidebar .tagline {
+    font-size: 6px;
+    letter-spacing: 0.8px;
+  }
+}
+
+@media (min-width: 801px) and (max-width: 1000px) {
+  .sidebar .mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sidebar .wordmark {
+    font-size: 22px;
+  }
+
+  .sidebar .tagline {
+    font-size: 5.5px;
+    letter-spacing: 0.65px;
+  }
+}
