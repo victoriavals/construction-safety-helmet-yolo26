@@ -4,12 +4,12 @@
  *
  * URL backend ditentukan dengan urutan:
  *   1. window.API_BASE   -> override runtime via public/config.js (bisa diubah TANPA build ulang)
- *   2. VITE_API_BASE     -> variabel build-time (mis. di-set pada dashboard Vercel)
+ *   2. NEXT_PUBLIC_API_BASE -> variabel build-time Next.js
  */
 
 const RAW_BASE =
   (typeof window !== "undefined" && window.API_BASE) ||
-  (import.meta.env.VITE_API_BASE as string | undefined) ||
+  process.env.NEXT_PUBLIC_API_BASE ||
   "";
 
 /** URL backend tanpa garis miring di akhir. */
@@ -49,15 +49,14 @@ export interface PredictImageResult {
 //
 // Karena itu health check di sini SABAR: percobaan berulang dengan backoff
 // sampai Space siap, dan statusnya bisa diikuti (subscribe) oleh komponen mana
-// pun. Warm-up bersifat SINGLETON — dipicu sekali saat app dibuka (App.tsx),
-// lalu DetectView cukup menumpang hasilnya.
+// pun. Warm-up bersifat SINGLETON — dipicu WorkspaceProvider saat app dibuka.
 // ---------------------------------------------------------------------------
 
 /** Status backend: belum diatur | sedang dibangunkan | siap | gagal. */
 export type BackendStatus = "unconfigured" | "waking" | "ready" | "error";
 
-const HEALTH_TIMEOUT_MS = 8_000;    // batas satu kali ping
-const WAKE_MAX_WAIT_MS = 120_000;   // total kesabaran menunggu Space bangun
+const HEALTH_TIMEOUT_MS = 8_000; // batas satu kali ping
+const WAKE_MAX_WAIT_MS = 120_000; // total kesabaran menunggu Space bangun
 const WAKE_BACKOFF_MS = [1_000, 2_000, 3_000, 5_000, 5_000, 8_000];
 
 let backendStatus: BackendStatus = "unconfigured";
@@ -79,7 +78,9 @@ export function getBackendStatus(): BackendStatus {
  * Ikuti perubahan status backend. Callback langsung dipanggil dengan status
  * terkini. Mengembalikan fungsi unsubscribe.
  */
-export function subscribeBackendStatus(fn: (s: BackendStatus) => void): () => void {
+export function subscribeBackendStatus(
+  fn: (s: BackendStatus) => void,
+): () => void {
   listeners.add(fn);
   fn(backendStatus);
   return () => {
@@ -92,7 +93,10 @@ async function pingHealth(timeoutMs: number): Promise<boolean> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const r = await fetch(API_BASE + "/", { method: "GET", signal: ctrl.signal });
+    const r = await fetch(API_BASE + "/", {
+      method: "GET",
+      signal: ctrl.signal,
+    });
     return r.ok;
   } catch {
     return false; // termasuk abort/timeout & network error saat Space masih boot
@@ -124,7 +128,8 @@ export function warmUpBackend(): Promise<boolean> {
         setStatus("error");
         return false; // benar-benar tidak merespons (mis. Space "paused")
       }
-      const wait = WAKE_BACKOFF_MS[Math.min(attempt, WAKE_BACKOFF_MS.length - 1)];
+      const wait =
+        WAKE_BACKOFF_MS[Math.min(attempt, WAKE_BACKOFF_MS.length - 1)];
       await new Promise((res) => setTimeout(res, wait));
     }
   })();
@@ -133,6 +138,7 @@ export function warmUpBackend(): Promise<boolean> {
 
 /** Ulangi warm-up dari nol (untuk tombol "Coba lagi" setelah gagal). */
 export function retryWarmUp(): Promise<boolean> {
+  if (backendStatus === "waking" && warmUpPromise) return warmUpPromise;
   warmUpPromise = null;
   return warmUpBackend();
 }
@@ -155,9 +161,17 @@ export const ERR_BACKEND_ASLEEP = "BACKEND_ASLEEP";
  * Pastikan backend siap sebelum mengirim inference. Bila Space sedang tidur,
  * request akan MENUNGGU sampai bangun alih-alih langsung gagal.
  */
-async function ensureAwake(): Promise<void> {
+async function ensureAwake(signal?: AbortSignal): Promise<void> {
+  signal?.throwIfAborted();
   if (backendStatus === "ready") return;
-  const ok = await warmUpBackend();
+  const pending = warmUpBackend();
+  const ok = await new Promise<boolean>((resolve, reject) => {
+    const abort = () => reject(new DOMException("Cancelled", "AbortError"));
+    signal?.addEventListener("abort", abort, { once: true });
+    pending
+      .then(resolve, reject)
+      .finally(() => signal?.removeEventListener("abort", abort));
+  });
   if (!ok) throw new Error(ERR_BACKEND_ASLEEP);
 }
 
@@ -166,16 +180,36 @@ export async function predictImage(
   blob: Blob,
   conf: number,
   iou: number,
+  signal?: AbortSignal,
 ): Promise<PredictImageResult> {
-  await ensureAwake(); // tunggu Space bangun dulu bila sedang tidur
+  await ensureAwake(signal);
   const fd = new FormData();
   fd.append("file", blob, "image.jpg");
   const r = await fetch(`${API_BASE}/predict/image?conf=${conf}&iou=${iou}`, {
     method: "POST",
     body: fd,
+    signal: AbortSignal.any([
+      AbortSignal.timeout(120_000),
+      ...(signal ? [signal] : []),
+    ]),
   });
   if (!r.ok) throw new Error("HTTP " + r.status);
-  return (await r.json()) as PredictImageResult;
+  const data = (await r.json()) as PredictImageResult;
+  const counts = CLASSES.map((name) => data.counts?.[name]);
+  if (
+    typeof data.annotated !== "string" ||
+    !/^data:image\/(jpeg|png);base64,/.test(data.annotated) ||
+    !counts.every((n) => Number.isInteger(n) && n >= 0) ||
+    !Number.isFinite(data.time_ms) ||
+    data.time_ms < 0 ||
+    !Number.isInteger(data.total) ||
+    data.total < 0 ||
+    !Number.isInteger(data.no_helmet) ||
+    data.no_helmet < 0
+  ) {
+    throw new Error("INVALID_RESPONSE");
+  }
+  return data;
 }
 
 /** Deteksi pada video. Mengembalikan MP4 (H.264) beranotasi sebagai Blob. */
@@ -183,14 +217,21 @@ export async function predictVideo(
   file: File,
   conf: number,
   iou: number,
+  signal?: AbortSignal,
 ): Promise<Blob> {
-  await ensureAwake(); // tunggu Space bangun dulu bila sedang tidur
+  await ensureAwake(signal);
   const fd = new FormData();
   fd.append("file", file, file.name || "video.mp4");
   const r = await fetch(`${API_BASE}/predict/video?conf=${conf}&iou=${iou}`, {
     method: "POST",
     body: fd,
+    signal: AbortSignal.any([
+      AbortSignal.timeout(300_000),
+      ...(signal ? [signal] : []),
+    ]),
   });
   if (!r.ok) throw new Error("HTTP " + r.status);
+  if (!r.headers.get("content-type")?.includes("video/"))
+    throw new Error("INVALID_RESPONSE");
   return r.blob();
 }
