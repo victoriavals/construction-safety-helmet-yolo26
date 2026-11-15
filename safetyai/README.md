@@ -77,7 +77,26 @@ npm run start
 
 Gunakan deployment Next.js pada Vercel atau server Node. Hasil build berada di `.next/`; **bukan lagi bundle Vite `dist/` yang dapat disajikan langsung sebagai file statis**. SSR/dynamic rendering diperlukan agar CSP nonce dapat ditambahkan pada script Next.js. Header keamanan dikelola `next.config.ts` dan `src/proxy.ts`, termasuk CSP produksi tanpa `unsafe-inline`/`unsafe-eval` pada script. `unsafe-eval` hanya ditambahkan saat development. Style inline tetap diizinkan untuk kebutuhan komponen.
 
-Untuk Vercel, tetapkan Root Directory `safetyai`, Framework Preset Next.js, dan Build Command `npm run build`; jangan memakai Output Directory `dist` lama. Tidak ada deployment yang dilakukan pada pekerjaan redesign ini.
+Konfigurasi Vercel disimpan pada `safetyai/vercel.json`: framework `nextjs`, Build Command `npm run build`, dan Output Directory `.next`. File ini menimpa pilihan framework/output lama pada Project Settings untuk deployment yang memuat commit tersebut. Root Directory tetap diatur pada dashboard Vercel, bukan di `vercel.json`.
+
+Pada **Vercel → Project → Settings → Build and Deployment**, gunakan:
+
+| Pengaturan | Nilai |
+| --- | --- |
+| Root Directory | `safetyai` |
+| Framework Preset | `Next.js` |
+| Build Command | `npm run build` |
+| Output Directory | `.next` (sesuai `vercel.json`) |
+
+Setelah mengubah file, commit dan push ke branch yang dipakai Vercel, lalu deploy **commit terbaru**. Redeploy commit lama tidak akan menyertakan perbaikan konfigurasi ini. Tidak ada deployment yang dilakukan oleh perubahan lokal ini.
+
+### Error `STATIC_BUILD_NO_OUT_DIR`: tidak ada folder `dist`
+
+Jika log sudah menampilkan `Compiled successfully` dan daftar rute Next.js, tetapi kemudian gagal mencari `dist`, proses kompilasi aplikasi berhasil. Konfigurasi deployment masih mengarah ke output Vite lama. Pastikan deployment menggunakan `safetyai/vercel.json` di atas dan Root Directory `safetyai`.
+
+Gunakan preset Next.js supaya rute SSR, Proxy/CSP, dan optimasi gambar ditangani oleh integrasi Next.js Vercel. Jangan membuat folder `dist` kosong atau menyalin `.next` ke `dist` untuk melewati error tersebut. Peringatan npm `Unknown env config "cache-dir"` pada log bukan penyebab error output directory ini.
+
+Referensi: [konfigurasi build Vercel](https://vercel.com/docs/builds/configure-a-build) dan [override melalui vercel.json](https://vercel.com/docs/project-configuration/vercel-json).
 
 Font di-bundle lokal. Komponen React Bits dapat ditambahkan melalui registry `@react-bits` pada `components.json`. GSAP/Lottie/Rive tersedia sebagai tooling global namun tidak dimuat dalam aplikasi tanpa kebutuhan fitur.
 
