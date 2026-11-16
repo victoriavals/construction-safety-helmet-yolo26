@@ -6,6 +6,9 @@
 /dataset/
 /dataset.zip
 
+# --- Paket portofolio lokal dan berkas kerja ekspor ---
+/portfolio-export/
+
 # --- Hasil eksperimen (semua output) ---
 # Abaikan isi runs/ tetapi pertahankan folder lewat .gitkeep.
 /runs/*
